@@ -74,6 +74,8 @@ def _build_notification_response(notif_id: int):
         "content": notif["content"],
         "project_tag": notif["project_tag"],
         "source_type": notif["source_type"],
+        "is_urgent": notif.get("is_urgent", 0),
+        "is_important": notif.get("is_important", 0),
         "created_at": notif["created_at"],
     })
 
@@ -116,6 +118,8 @@ def notify_upload():
             project_tag=result["project_tag"],
             source_type="screenshot",
             raw_content=result["raw_content"],
+            is_urgent=int(result.get("is_urgent", 0)),
+            is_important=int(result.get("is_important", 0)),
         )
         return _build_notification_response(notif_id)
 
@@ -158,6 +162,8 @@ def notify_voice():
             project_tag=result["project_tag"],
             source_type="voice",
             raw_content=result["raw_content"],
+            is_urgent=int(result.get("is_urgent", 0)),
+            is_important=int(result.get("is_important", 0)),
         )
         return _build_notification_response(notif_id)
 
@@ -197,6 +203,8 @@ def notify_text():
             project_tag=result["project_tag"],
             source_type="text",
             raw_content=result["raw_content"],
+            is_urgent=int(result.get("is_urgent", 0)),
+            is_important=int(result.get("is_important", 0)),
         )
         return _build_notification_response(notif_id)
 
@@ -420,6 +428,22 @@ def get_date_todos():
     except Exception as e:
         logger.exception("获取日期待办失败")
         return error(f"获取日期待办失败: {e}")
+
+
+@app.route("/api/task_matrix", methods=["GET"])
+def get_task_matrix():
+    """获取四象限任务矩阵数据。
+
+    参数:
+      - user_id: 用户ID
+    """
+    try:
+        user_id = request.args.get("user_id", "anonymous")
+        data = db.get_task_matrix(user_id)
+        return success(data)
+    except Exception as e:
+        logger.exception("获取任务矩阵失败")
+        return error(f"获取任务矩阵失败: {e}")
 
 
 # ================================================================

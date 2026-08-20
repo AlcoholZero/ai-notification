@@ -20,24 +20,24 @@ FLASK_PORT = int(os.getenv("FLASK_PORT", "5000"))
 FLASK_DEBUG = os.getenv("FLASK_DEBUG", "true").lower() == "true"
 
 # ==================== LLM 配置（信息提取用） ====================
-# 提供商：openai / dashscope（通义千问）/ 其他兼容 OpenAI 接口的服务
+# 默认使用本地 Ollama，无需 API 密钥；如需使用云端 API，修改 .env 即可
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "openai")
-LLM_API_KEY = os.getenv("LLM_API_KEY", "")
-LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://api.openai.com/v1")
-LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4o-mini")
+LLM_API_KEY = os.getenv("LLM_API_KEY", "ollama")
+LLM_BASE_URL = os.getenv("LLM_BASE_URL", "http://localhost:11434/v1")
+LLM_MODEL = os.getenv("LLM_MODEL", "qwen2.5:7b")
 
 # ==================== OCR 配置（截图文字识别） ====================
-# 引擎选择：openai_vision / baidu / mock
+# 引擎选择：openai_vision（兼容 Ollama 视觉模型）/ baidu / mock
 OCR_PROVIDER = os.getenv("OCR_PROVIDER", "openai_vision")
-# OpenAI Vision API
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-OPENAI_VISION_MODEL = os.getenv("OPENAI_VISION_MODEL", "gpt-4o")
+# Vision API（默认指向本地 Ollama，使用视觉模型）
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "ollama")
+OPENAI_VISION_MODEL = os.getenv("OPENAI_VISION_MODEL", "qwen2.5-vl:7b")
 # 百度 OCR 通用文字识别
 BAIDU_OCR_API_KEY = os.getenv("BAIDU_OCR_API_KEY", "")
 BAIDU_OCR_SECRET_KEY = os.getenv("BAIDU_OCR_SECRET_KEY", "")
 
 # ==================== ASR 配置（语音转文字） ====================
-# 引擎选择：openai_whisper / baidu / mock
+# 引擎选择：openai_whisper / baidu / mock（本地无密钥时自动回退到 mock）
 ASR_PROVIDER = os.getenv("ASR_PROVIDER", "openai_whisper")
 # OpenAI Whisper
 OPENAI_WHISPER_MODEL = os.getenv("OPENAI_WHISPER_MODEL", "whisper-1")
@@ -46,8 +46,9 @@ BAIDU_ASR_API_KEY = os.getenv("BAIDU_ASR_API_KEY", "")
 BAIDU_ASR_SECRET_KEY = os.getenv("BAIDU_ASR_SECRET_KEY", "")
 
 # ==================== 语义分类配置 ====================
-# 引擎选择：openai（OpenAI Embeddings）/ local（本地模型）/ mock（关键词匹配）
-EMBEDDING_PROVIDER = os.getenv("EMBEDDING_PROVIDER", "openai")
+# 引擎选择：openai（OpenAI Embeddings）/ local（本地 sentence-transformers）/ mock（关键词匹配）
+# 默认 mock：无需密钥，使用关键词匹配；配置 Ollama 后可使用 local
+EMBEDDING_PROVIDER = os.getenv("EMBEDDING_PROVIDER", "mock")
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "text-embedding-ada-002")
 # 本地 sentence-transformers 模型名
 LOCAL_EMBEDDING_MODEL = os.getenv("LOCAL_EMBEDDING_MODEL", "paraphrase-multilingual-MiniLM-L12-v2")

@@ -22,6 +22,7 @@ backend/data/
 # Environment variables
 .env
 *.env
+!.env.example
 
 # IDE
 .vscode/

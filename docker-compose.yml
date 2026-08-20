@@ -1,0 +1,51 @@
+services:
+  # ==================== Ollama 本地大模型 ====================
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+    # GPU 加速（如需启用，取消注释下方部署段）
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+    restart: unless-stopped
+
+  # ==================== AI通知小程序后端 ====================
+  app:
+    build: .
+    container_name: ai-notify
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_HOST=0.0.0.0
+      - FLASK_PORT=5000
+      - FLASK_DEBUG=false
+      # LLM 配置（指向容器内的 Ollama）
+      - LLM_PROVIDER=openai
+      - LLM_API_KEY=ollama
+      - LLM_BASE_URL=http://ollama:11434/v1
+      - LLM_MODEL=${LLM_MODEL:-qwen2.5:7b}
+      # OCR 配置（使用 Ollama 视觉模型）
+      - OCR_PROVIDER=openai_vision
+      - OPENAI_API_KEY=ollama
+      - OPENAI_VISION_MODEL=${OCR_MODEL:-qwen2.5-vl:7b}
+      # ASR 配置（本地无 Whisper，回退到 mock）
+      - ASR_PROVIDER=mock
+      # 语义分类（本地使用关键词匹配）
+      - EMBEDDING_PROVIDER=mock
+    volumes:
+      - app-data:/app/backend/data
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+volumes:
+  ollama-models:
+  app-data:

@@ -74,6 +74,8 @@ class NotificationPipeline:
             "content": info.content,
             "project_tag": project_tag,
             "raw_content": raw_content,
+            "is_urgent": info.is_urgent,
+            "is_important": info.is_important,
         }
 
     def _preprocess(

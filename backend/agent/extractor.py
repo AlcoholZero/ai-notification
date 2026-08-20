@@ -25,26 +25,28 @@ EXTRACTION_PROMPT = """你是一个通知信息提取助手。请从以下原始
 
 请提取以下字段，并以 JSON 格式返回（只返回 JSON，不要任何其他内容）：
 {{
-  "title": "通知标题（简洁概括，10-30字，不含emoji）",
-  "content": "通知正文内容（使用emoji进行结构化排版，格式见下方说明）",
-  "event_time": "通知中提到的时间（如'明天下午3点'，如无则为空字符串）",
-  "location": "通知中提到的地点（如'会议室201'，如无则为空字符串）",
-  "participants": "通知中提到的相关人员或角色（如无则为空字符串）"
+ "title": "通知标题（简洁概括，10-30字，不含emoji）",
+ "content": "通知正文内容（使用emoji进行结构化排版，格式见下方说明）",
+ "event_time": "通知中提到的时间（如'明天下午3点'，如无则为空字符串）",
+ "location": "通知中提到的地点（如'会议室201'，如无则为空字符串）",
+ "participants": "通知中提到的相关人员或角色（如无则为空字符串）",
+ "is_urgent": true或false（是否紧急：有明确近期截止时间/限时要求/逾期警告/加急标记则为true）,
+ "is_important": true或false（是否重要：涉及重要后果/必须执行/关键事项/影响较大则为true）
 }}
 
 content 字段的排版格式要求（使用换行符\\n分隔各部分）：
 1. 使用适当的emoji作为各部分的标记，使通知更清晰易读
 2. 参考格式：
-   📤提交方式：[提交方式的描述]
+ 📤提交方式：[提交方式的描述]
 
-   🔍[小节标题]：
-   [小节内容，有序号时用 1. 2. 3. 编号]
+ 🔍[小节标题]：
+ [小节内容，有序号时用 1. 2. 3. 编号]
 
-   ⚠️重要提醒：
-   1. [提醒事项一]
-   2. [提醒事项二]
+ ⚠️重要提醒：
+ 1. [提醒事项一]
+ 2. [提醒事项二]
 
-   [结尾提醒语]
+ [结尾提醒语]
 3. 根据原文实际内容选择合适的emoji和小节，不要生搬硬套
 4. 常用emoji参考：📢通知、⏰时间、📍地点、📤提交方式、🔍注意/说明、⚠️重要提醒、✅要求、❗特别提示
 5. 各部分之间用空行分隔，保持层次清晰
@@ -59,12 +61,14 @@ content 字段的排版格式要求（使用换行符\\n分隔各部分）：
 class NotificationInfo:
     """通知信息提取结果的数据结构。"""
 
-    def __init__(self, title="", content="", event_time="", location="", participants=""):
+    def __init__(self, title="", content="", event_time="", location="", participants="", is_urgent=False, is_important=False):
         self.title = title
         self.content = content
         self.event_time = event_time
         self.location = location
         self.participants = participants
+        self.is_urgent = is_urgent
+        self.is_important = is_important
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -73,6 +77,8 @@ class NotificationInfo:
             "event_time": self.event_time,
             "location": self.location,
             "participants": self.participants,
+            "is_urgent": self.is_urgent,
+            "is_important": self.is_important,
         }
 
 
@@ -119,6 +125,8 @@ class LLMExtractor:
             event_time=data.get("event_time", ""),
             location=data.get("location", ""),
             participants=data.get("participants", ""),
+            is_urgent=bool(data.get("is_urgent", False)),
+            is_important=bool(data.get("is_important", False)),
         )
 
         # 将时间、地点、参与人附加到内容末尾，便于前端展示
@@ -176,6 +184,16 @@ class RuleBasedExtractor:
         (re.compile(r"特别提示|温馨提示|特别说明"), "❗"),
     ]
 
+    # 紧急关键词
+    URGENT_PATTERNS = [
+        re.compile(r"紧急|加急|立即|马上|尽快|限时|逾期|今天|明天|今日|明日|截止|deadline|ASAP"),
+    ]
+
+    # 重要关键词
+    IMPORTANT_PATTERNS = [
+        re.compile(r"重要|必须|关键|严重|务必|一定|要求|务必|影响|后果|严禁|不得"),
+    ]
+
     def extract(self, raw_text: str) -> NotificationInfo:
         """通过正则规则从文本中提取通知信息。"""
         logger.info("使用规则提取器处理文本")
@@ -211,11 +229,17 @@ class RuleBasedExtractor:
         if meta:
             content = content.rstrip() + "\n\n" + "\n".join(meta)
 
+        # 紧急/重要检测
+        is_urgent = any(p.search(text) for p in self.URGENT_PATTERNS)
+        is_important = any(p.search(text) for p in self.IMPORTANT_PATTERNS)
+
         info = NotificationInfo(
             title=title,
             content=content,
             event_time=event_time,
             location=location,
+            is_urgent=is_urgent,
+            is_important=is_important,
         )
         logger.info("规则提取完成: title=%s", info.title)
         return info

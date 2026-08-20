@@ -60,9 +60,19 @@ class Database:
                     project_tag  TEXT    DEFAULT '未分类',
                     source_type  TEXT    NOT NULL,
                     raw_content  TEXT    DEFAULT '',
+                    is_urgent    INTEGER DEFAULT 0,
+                    is_important INTEGER DEFAULT 0,
                     created_at   TEXT    NOT NULL
                 )
             """)
+
+            # 迁移：为旧数据库添加新列
+            cursor.execute("PRAGMA table_info(notifications)")
+            n_columns = [col[1] for col in cursor.fetchall()]
+            if "is_urgent" not in n_columns:
+                cursor.execute("ALTER TABLE notifications ADD COLUMN is_urgent INTEGER DEFAULT 0")
+            if "is_important" not in n_columns:
+                cursor.execute("ALTER TABLE notifications ADD COLUMN is_important INTEGER DEFAULT 0")
 
             # ---- 项目标签表 ----
             cursor.execute("""
@@ -95,6 +105,8 @@ class Database:
         project_tag: str,
         source_type: str,
         raw_content: str,
+        is_urgent: int = 0,
+        is_important: int = 0,
     ) -> int:
         """创建通知记录，返回新记录的 ID。"""
         now = datetime.now().isoformat()
@@ -102,12 +114,12 @@ class Database:
             cursor = conn.cursor()
             cursor.execute(
                 """INSERT INTO notifications
-                   (user_id, title, content, project_tag, source_type, raw_content, created_at)
-                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
-                (user_id, title, content, project_tag, source_type, raw_content, now),
+                   (user_id, title, content, project_tag, source_type, raw_content, is_urgent, is_important, created_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (user_id, title, content, project_tag, source_type, raw_content, is_urgent, is_important, now),
             )
             notif_id = cursor.lastrowid
-        logger.info("通知记录已创建: id=%d, title=%s", notif_id, title)
+        logger.info("通知记录已创建: id=%d, title=%s, urgent=%d, important=%d", notif_id, title, is_urgent, is_important)
         return notif_id
 
     def get_notification(self, notif_id: int) -> Optional[Dict[str, Any]]:
@@ -369,4 +381,24 @@ class Database:
             "today": date_notifs,
             "deadlines": extra,
             "all": date_notifs + extra,
+        }
+
+    def get_task_matrix(self, user_id: str) -> Dict[str, list]:
+        """获取四象限任务矩阵数据。"""
+        with self.get_conn() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """SELECT id, title, content, project_tag, source_type,
+                          is_urgent, is_important, created_at
+                   FROM notifications WHERE user_id = ?
+                   ORDER BY created_at DESC LIMIT 100""",
+                (user_id,),
+            )
+            rows = [dict(r) for r in cursor.fetchall()]
+
+        return {
+            "q1": [r for r in rows if r["is_urgent"] and r["is_important"]],
+            "q2": [r for r in rows if not r["is_urgent"] and r["is_important"]],
+            "q3": [r for r in rows if r["is_urgent"] and not r["is_important"]],
+            "q4": [r for r in rows if not r["is_urgent"] and not r["is_important"]],
         }

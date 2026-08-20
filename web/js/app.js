@@ -36,6 +36,7 @@ const App = {
     calendarSelectedDate: null,
     todayTodos: null,
     todoDate: null,
+    taskMatrix: null,
   },
 
   init() {
@@ -199,6 +200,12 @@ const App = {
         this.toast('删除成功');
         document.querySelectorAll('.modal-overlay').forEach((o) => o.remove());
         this.loadRecent();
+        if (this.state.currentPage === 'index') {
+          this.loadTaskMatrix();
+          this.loadMiniCalendar();
+          this.loadIndexTodos(this.state.todoDate);
+          this.loadSidebarProjects();
+        }
         if (this.state.currentPage === 'notifications') this.loadNotifList(true);
         if (this.state.currentPage === 'calendar') {
           this.loadCalendarData();
@@ -271,38 +278,71 @@ const App = {
   // ================================================================
   renderIndex(container) {
     this.state.currentPage = 'index';
+    if (!this.state.todoDate) this.state.todoDate = this.todayStr();
     container.innerHTML = `
-      <div id="processing-area"></div>
-      <div id="result-area"></div>
-      <div id="recent-area"></div>
-      <div class="chat-spacer"></div>
-      <div class="chat-bottom-bar" id="chat-bottom-bar">
-        <div class="chat-project-bar" id="chat-project-bar"></div>
-        <div class="chat-input-bar" id="chat-bar">
-          <div id="chat-image-preview" class="chat-image-preview" style="display:none"></div>
-          <div class="chat-input-row">
-            <div class="chat-attach" id="btn-attach">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
-              </svg>
-            </div>
-            <textarea class="chat-textarea" id="chat-text" placeholder="输入通知内容，可直接拖入或粘贴图片…" rows="1"></textarea>
-            <div class="chat-mic" id="btn-mic">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                <line x1="12" y1="19" x2="12" y2="23"/>
-                <line x1="8" y1="23" x2="16" y2="23"/>
-              </svg>
-            </div>
-            <div class="chat-send" id="btn-send" style="display:none">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="22" y1="2" x2="11" y2="13"/>
-                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-              </svg>
+      <div class="main-layout">
+        <aside class="layout-left">
+          <div class="sidebar-header">
+            <span class="sidebar-title">项目</span>
+            <div class="sidebar-add-btn" onclick="App.showCreateProject()">+ 新建</div>
+          </div>
+          <div class="sidebar-project-list" id="sidebar-projects"></div>
+        </aside>
+        <section class="layout-center">
+          <div id="processing-area"></div>
+          <div id="result-area"></div>
+          <div id="recent-area"></div>
+          <div class="chat-spacer"></div>
+          <div class="chat-bottom-bar" id="chat-bottom-bar">
+            <div class="chat-project-bar" id="chat-project-bar"></div>
+            <div class="chat-input-bar" id="chat-bar">
+              <div id="chat-image-preview" class="chat-image-preview" style="display:none"></div>
+              <div class="chat-input-row">
+                <div class="chat-attach" id="btn-attach">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                  </svg>
+                </div>
+                <textarea class="chat-textarea" id="chat-text" placeholder="输入通知内容，可直接拖入或粘贴图片…" rows="1"></textarea>
+                <div class="chat-mic" id="btn-mic">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                    <line x1="12" y1="19" x2="12" y2="23"/>
+                    <line x1="8" y1="23" x2="16" y2="23"/>
+                  </svg>
+                </div>
+                <div class="chat-send" id="btn-send" style="display:none">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"/>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
+        <aside class="layout-right">
+          <div class="right-section">
+            <div class="right-section-title">任务分类</div>
+            <div class="task-matrix" id="task-matrix"></div>
+          </div>
+          <div class="right-section">
+            <div class="mini-calendar" id="mini-calendar"></div>
+          </div>
+          <div class="right-section">
+            <div class="todo-nav-header">
+              <div class="todo-nav-btn" onclick="App.prevTodoDate()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+              </div>
+              <div class="todo-nav-label" id="index-todo-label"></div>
+              <div class="todo-nav-btn" onclick="App.nextTodoDate()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+            </div>
+            <div id="index-todos"></div>
+          </div>
+        </aside>
       </div>
       <input type="file" id="hidden-file-input" accept="image/*" style="display:none">
     `;
@@ -312,7 +352,6 @@ const App = {
     const micBtn = document.getElementById('btn-mic');
     const attachBtn = document.getElementById('btn-attach');
     const fileInput = document.getElementById('hidden-file-input');
-    const chatBar = document.getElementById('chat-bar');
     const bottomBar = document.getElementById('chat-bottom-bar');
 
     textarea.addEventListener('input', () => {
@@ -366,7 +405,161 @@ const App = {
     if (this.state.processStatus === 'done' && this.state.result) this.showResult(this.state.result);
 
     this.loadChatProjects();
+    this.loadSidebarProjects();
     this.loadRecent();
+    this.loadTaskMatrix();
+    this.loadMiniCalendar();
+    this.loadIndexTodos(this.state.todoDate);
+  },
+
+  loadSidebarProjects() {
+    API.getProjects()
+      .then((data) => {
+        const projects = data.list || data || [];
+        this.state.projects = projects;
+        const list = document.getElementById('sidebar-projects');
+        if (!list) return;
+        let html = `<div class="sidebar-project-item ${this.state.selectedProject === '全部' ? 'active' : ''}" onclick="App.selectChatProject('全部')">
+          <div class="sidebar-proj-dot" style="background:#86868b"></div>
+          <span class="sidebar-proj-name">全部</span>
+          <span class="sidebar-proj-count">${projects.reduce((s, p) => s + (p.count || 0), 0)}</span>
+        </div>`;
+        html += projects.map((p) => `<div class="sidebar-project-item ${p.name === this.state.selectedProject ? 'active' : ''}" onclick="App.selectChatProject('${this.escape(p.name)}')">
+          <div class="sidebar-proj-dot" style="background:${p.color || '#007AFF'}"></div>
+          <span class="sidebar-proj-name">${this.escape(p.name)}</span>
+          <span class="sidebar-proj-count">${p.count || 0}</span>
+        </div>`).join('');
+        list.innerHTML = html;
+      })
+      .catch(() => {});
+  },
+
+  loadTaskMatrix() {
+    const container = document.getElementById('task-matrix');
+    if (!container) return;
+    container.innerHTML = '<div class="task-matrix-loading"><div class="spinner" style="width:20px;height:20px;border-width:2px"></div></div>';
+
+    API.getTaskMatrix()
+      .then((data) => {
+        this.state.taskMatrix = data;
+        this.renderTaskMatrix(data);
+      })
+      .catch(() => {
+        container.innerHTML = '<div class="task-matrix-loading">加载失败</div>';
+      });
+  },
+
+  renderTaskMatrix(data) {
+    const container = document.getElementById('task-matrix');
+    if (!container) return;
+    const q1 = data.q1 || [];
+    const q2 = data.q2 || [];
+    const q3 = data.q3 || [];
+    const q4 = data.q4 || [];
+
+    const renderQuadrant = (items, label, color, icon) => {
+      if (items.length === 0) return `<div class="quadrant" style="--q-color:${color}">
+        <div class="quadrant-header"><span>${icon}</span><span class="quadrant-label">${label}</span></div>
+        <div class="quadrant-empty">暂无</div>
+      </div>`;
+      return `<div class="quadrant" style="--q-color:${color}">
+        <div class="quadrant-header"><span>${icon}</span><span class="quadrant-label">${label}</span><span class="quadrant-count">${items.length}</span></div>
+        ${items.slice(0, 3).map((n) => `<div class="quadrant-item" onclick="App.openDetailModal(${n.id})">
+          <span class="quadrant-item-title">${this.escape(n.title || '未命名')}</span>
+        </div>`).join('')}
+        ${items.length > 3 ? `<div class="quadrant-more">还有 ${items.length - 3} 项…</div>` : ''}
+      </div>`;
+    };
+
+    container.innerHTML = `
+      ${renderQuadrant(q1, '紧急且重要', '#FF3B30', '🔴')}
+      ${renderQuadrant(q2, '重要不紧急', '#007AFF', '🔵')}
+      ${renderQuadrant(q3, '紧急不重要', '#FF9500', '🟠')}
+      ${renderQuadrant(q4, '不紧急不重要', '#8E8E93', '⚪')}
+    `;
+  },
+
+  loadMiniCalendar() {
+    const { calendarYear: year, calendarMonth: month } = this.state;
+    const container = document.getElementById('mini-calendar');
+    if (!container) return;
+    container.innerHTML = '<div class="mini-cal-loading"><div class="spinner" style="width:20px;height:20px;border-width:2px"></div></div>';
+
+    API.getCalendar(year, month)
+      .then((data) => {
+        this.state.calendarData = data.dates || {};
+        this.renderMiniCalendar();
+      })
+      .catch(() => {
+        container.innerHTML = '<div class="mini-cal-loading">加载失败</div>';
+      });
+  },
+
+  renderMiniCalendar() {
+    const container = document.getElementById('mini-calendar');
+    if (!container) return;
+    const { calendarYear: year, calendarMonth: month, calendarData, todoDate } = this.state;
+    const firstDay = new Date(year, month - 1, 1).getDay();
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const today = new Date();
+    const todayStr = today.getFullYear() === year && today.getMonth() + 1 === month
+      ? `${year}-${String(month).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+      : null;
+
+    let html = `<div class="mini-cal-header">
+      <span class="mini-cal-month">${year}年${month}月</span>
+    </div>
+    <div class="mini-cal-weekdays">
+      <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+    </div>
+    <div class="mini-cal-grid">`;
+    for (let i = 0; i < firstDay; i++) html += '<div class="mini-cal-day empty"></div>';
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      const hasNotif = (calendarData[dateStr] || []).length > 0;
+      const isToday = dateStr === todayStr;
+      const isSelected = dateStr === todoDate;
+      html += `<div class="mini-cal-day${hasNotif ? ' has-notif' : ''}${isToday ? ' today' : ''}${isSelected ? ' selected' : ''}" onclick="App.selectIndexDate('${dateStr}')">${d}</div>`;
+    }
+    html += '</div>';
+    container.innerHTML = html;
+  },
+
+  selectIndexDate(date) {
+    this.state.todoDate = date;
+    this.renderMiniCalendar();
+    this.loadIndexTodos(date);
+  },
+
+  loadIndexTodos(date) {
+    const labelEl = document.getElementById('index-todo-label');
+    if (labelEl) labelEl.textContent = this.formatDateLabel(date);
+    const container = document.getElementById('index-todos');
+    if (!container) return;
+    container.innerHTML = '<div class="todo-loading"><div class="spinner" style="width:20px;height:20px;border-width:2px"></div></div>';
+
+    API.getDateTodos(date)
+      .then((data) => {
+        const dayList = data.today || [];
+        const deadlineList = data.deadlines || [];
+        if (dayList.length === 0 && deadlineList.length === 0) {
+          container.innerHTML = '<div class="todo-empty"><div class="todo-empty-text">暂无待办</div></div>';
+          return;
+        }
+        let html = '';
+        if (dayList.length > 0) {
+          html += `<div class="todo-section-label">当日通知 (${dayList.length})</div>`;
+          html += dayList.map((n) => this.todoItem(n)).join('');
+        }
+        if (deadlineList.length > 0) {
+          html += `<div class="todo-section-label">📅 提及此日 (${deadlineList.length})</div>`;
+          html += deadlineList.map((n) => this.todoItem(n)).join('');
+        }
+        container.innerHTML = html;
+      })
+      .catch(() => {
+        container.innerHTML = '<div class="todo-empty"><div class="todo-empty-text">加载失败</div></div>';
+      });
   },
 
   loadChatProjects() {
@@ -392,6 +585,10 @@ const App = {
     this.state.selectedProject = tag;
     document.querySelectorAll('.chat-proj-tag').forEach((el) => {
       el.classList.toggle('active', el.textContent === tag);
+    });
+    document.querySelectorAll('.sidebar-project-item').forEach((el) => {
+      const name = el.querySelector('.sidebar-proj-name');
+      el.classList.toggle('active', name && name.textContent === tag);
     });
   },
 
@@ -470,24 +667,22 @@ const App = {
         const area = document.getElementById('recent-area');
         if (!area) return;
         if (list.length === 0) {
-          area.innerHTML = `
-            <div class="chat-empty">
-              <div class="chat-empty-icon">💬</div>
-              <div class="chat-empty-text">输入通知内容，AI 自动识别分类</div>
-            </div>`;
+          area.innerHTML = '';
           return;
         }
-        area.innerHTML = `
-          <div class="section-header">
-            <span class="section-title">最近处理</span>
-            <span class="section-more" onclick="location.hash='#/notifications'">查看全部 ›</span>
-          </div>
-          ${list.map((n) => this.notifCard(n)).join('')}
-        `;
+        area.innerHTML = '<div class="section-label">最近通知</div>' + list.map((n) => this.notifCard(n)).join('');
         this.attachSwipeEvents(area);
       })
       .catch(() => {});
   },
+
+  refreshAfterNotif() {
+    this.loadRecent();
+    this.loadTaskMatrix();
+    this.loadMiniCalendar();
+    this.loadSidebarProjects();
+  },
+
 
   uploadScreenshot(file) {
     this.state.processStatus = 'processing';
@@ -500,7 +695,7 @@ const App = {
         this.state.currentStyleKey = 'emoji';
         this.showResult(data);
         this.fetchStyles(data);
-        this.loadRecent();
+        this.refreshAfterNotif();
       })
       .catch(() => {
         this.state.processStatus = 'idle';
@@ -590,7 +785,7 @@ const App = {
         this.state.currentStyleKey = 'emoji';
         this.showResult(data);
         this.fetchStyles(data);
-        this.loadRecent();
+        this.refreshAfterNotif();
       })
       .catch(() => {
         this.state.processStatus = 'idle';
@@ -609,7 +804,7 @@ const App = {
         this.state.currentStyleKey = 'emoji';
         this.showResult(data);
         this.fetchStyles(data);
-        this.loadRecent();
+        this.refreshAfterNotif();
       })
       .catch(() => {
         this.state.processStatus = 'idle';
@@ -998,6 +1193,7 @@ const App = {
         this.toast('创建成功');
         this.loadProjectsForProfile();
         this.loadChatProjects();
+        this.loadSidebarProjects();
       });
     };
   },
@@ -1178,14 +1374,24 @@ const App = {
 
   prevTodoDate() {
     this.state.todoDate = this.shiftDate(this.state.todoDate, -1);
-    this.loadDateTodos(this.state.todoDate);
-    this.highlightCalendarDay();
+    if (this.state.currentPage === 'index') {
+      this.renderMiniCalendar();
+      this.loadIndexTodos(this.state.todoDate);
+    } else {
+      this.loadDateTodos(this.state.todoDate);
+      this.highlightCalendarDay();
+    }
   },
 
   nextTodoDate() {
     this.state.todoDate = this.shiftDate(this.state.todoDate, 1);
-    this.loadDateTodos(this.state.todoDate);
-    this.highlightCalendarDay();
+    if (this.state.currentPage === 'index') {
+      this.renderMiniCalendar();
+      this.loadIndexTodos(this.state.todoDate);
+    } else {
+      this.loadDateTodos(this.state.todoDate);
+      this.highlightCalendarDay();
+    }
   },
 
   highlightCalendarDay() {

@@ -1,9 +1,9 @@
 /**
  * API 客户端 - 封装所有后端接口调用
- * 对应后端 http://localhost:5000/api
+ * 使用相对路径，兼容本地开发、Docker 部署、服务器部署
  */
 const API = (function () {
-  const BASE_URL = 'http://localhost:5000/api';
+  const BASE_URL = '/api';
 
   function getUserId() {
     return App.state.userId;
@@ -108,6 +108,9 @@ const API = (function () {
     },
     getDateTodos(date) {
       return request('/date_todos?user_id=' + getUserId() + '&date=' + date, 'GET');
+    },
+    getTaskMatrix() {
+      return request('/task_matrix?user_id=' + getUserId(), 'GET');
     },
     healthCheck() {
       return request('/health', 'GET');
