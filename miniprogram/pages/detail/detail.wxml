@@ -1,0 +1,59 @@
+<!-- detail.wxml - 通知详情页 -->
+
+<!-- 加载中 -->
+<view class="loading-container" wx:if="{{loading}}">
+  <view class="loading-spinner-lg"></view>
+  <text class="loading-text">加载中...</text>
+</view>
+
+<!-- 详情内容 -->
+<view class="container" wx:if="{{!loading && detail}}">
+
+  <!-- 主信息卡片 -->
+  <view class="card detail-main-card">
+    <!-- 标题 -->
+    <view class="detail-title">{{detail.title || '未命名通知'}}</view>
+
+    <!-- 元信息行 -->
+    <view class="detail-meta">
+      <!-- 来源类型 -->
+      <view class="meta-item">
+        <text class="meta-icon">{{sourceIcon}}</text>
+        <text class="meta-text">{{sourceLabel}}</text>
+      </view>
+      <!-- 项目标签 -->
+      <view class="meta-tag" wx:if="{{detail.project_tag}}" style="background-color: {{detail.tag_color || '#3B82F6'}}">
+        {{detail.project_tag}}
+      </view>
+      <!-- 创建时间 -->
+      <view class="meta-item meta-time">
+        <text class="meta-text">{{detail.created_at || detail.create_time || ''}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 通知内容 -->
+  <view class="card">
+    <view class="section-label">通知内容</view>
+    <view class="detail-content">{{detail.content || '暂无内容'}}</view>
+    <view class="copy-btn" bindtap="onCopyContent">📋 复制内容</view>
+  </view>
+
+  <!-- 原始内容 -->
+  <view class="card" wx:if="{{detail.raw_content}}">
+    <view class="section-label">原始内容</view>
+    <view class="detail-raw-content">{{detail.raw_content}}</view>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="detail-actions">
+    <view class="btn btn-danger" bindtap="onDelete">🗑️ 删除通知</view>
+  </view>
+
+</view>
+
+<!-- 空状态 -->
+<view class="empty-state" wx:if="{{!loading && !detail}}">
+  <view class="empty-state-icon">😕</view>
+  <view class="empty-state-text">通知不存在或已删除</view>
+</view>

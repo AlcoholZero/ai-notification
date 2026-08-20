@@ -1,0 +1,71 @@
+/* notifications.wxss - 通知列表页样式 */
+
+/* 标签筛选栏 */
+.tag-bar {
+  display: flex;
+  white-space: nowrap;
+  padding: 20rpx 24rpx;
+  background-color: #ffffff;
+  margin-bottom: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.tag-item {
+  display: inline-block;
+  padding: 12rpx 32rpx;
+  margin-right: 16rpx;
+  border-radius: 32rpx;
+  font-size: 26rpx;
+  color: #666666;
+  background-color: #F5F5F5;
+  transition: all 0.2s ease;
+}
+
+.tag-item.active {
+  background-color: #3B82F6;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+/* 通知列表 */
+.notification-list {
+  padding: 8rpx 0 32rpx;
+}
+
+/* 加载更多 */
+.load-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32rpx 0;
+  color: #999999;
+  font-size: 24rpx;
+  gap: 12rpx;
+}
+
+.loading-spinner {
+  width: 32rpx;
+  height: 32rpx;
+  border: 4rpx solid #E0E0E0;
+  border-top-color: #3B82F6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.no-more {
+  color: #CCCCCC;
+}
+
+/* 空状态 */
+.empty-state-subtext {
+  font-size: 24rpx;
+  color: #BBBBBB;
+  margin-top: 12rpx;
+}

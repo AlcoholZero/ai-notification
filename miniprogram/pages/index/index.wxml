@@ -1,0 +1,128 @@
+<!-- index.wxml - 首页（多模态输入） -->
+<view class="container">
+
+  <!-- 顶部标题区 -->
+  <view class="header">
+    <view class="header-icon">🤖</view>
+    <view class="header-title">AI通知助手</view>
+    <view class="header-subtitle">拍照·语音·文字，智能识别通知</view>
+  </view>
+
+  <!-- 输入入口卡片 -->
+  <view class="input-section">
+    <view class="input-card" bindtap="onTakePhoto">
+      <view class="input-card-icon">📷</view>
+      <view class="input-card-label">拍照识别</view>
+      <view class="input-card-desc">拍群聊截图</view>
+    </view>
+
+    <view class="input-card" bindtap="onChooseFromAlbum">
+      <view class="input-card-icon">🖼️</view>
+      <view class="input-card-label">相册选图</view>
+      <view class="input-card-desc">从相册上传</view>
+    </view>
+
+    <view class="input-card {{isRecording ? 'recording' : ''}}" bindtap="{{isRecording ? 'stopRecording' : 'startRecording'}}">
+      <view class="input-card-icon">{{isRecording ? '⏹️' : '🎤'}}</view>
+      <view class="input-card-label">{{isRecording ? '停止录音' : '语音输入'}}</view>
+      <view class="input-card-desc">{{isRecording ? recordDuration + '秒' : '录音转文字'}}</view>
+    </view>
+
+    <view class="input-card" bindtap="showTextInputModal">
+      <view class="input-card-icon">⌨️</view>
+      <view class="input-card-label">文字输入</view>
+      <view class="input-card-desc">手动输入</view>
+    </view>
+  </view>
+
+  <!-- 录音中的波形动画提示 -->
+  <view class="recording-tip" wx:if="{{isRecording}}">
+    <view class="recording-wave">
+      <view class="wave-bar"></view>
+      <view class="wave-bar"></view>
+      <view class="wave-bar"></view>
+      <view class="wave-bar"></view>
+      <view class="wave-bar"></view>
+    </view>
+    <text class="recording-text">正在录音...{{recordDuration}}秒</text>
+    <view class="stop-btn" bindtap="stopRecording">点击停止</view>
+  </view>
+
+  <!-- 处理中状态 -->
+  <view class="processing-overlay" wx:if="{{processStatus === 'processing'}}">
+    <view class="processing-card">
+      <view class="processing-spinner"></view>
+      <view class="processing-text">AI正在识别处理中...</view>
+      <view class="processing-subtext">提取标题、内容、自动分类</view>
+    </view>
+  </view>
+
+  <!-- 处理结果预览 -->
+  <view class="result-card" wx:if="{{processStatus === 'done' && result}}">
+    <view class="result-header">
+      <text class="result-title">✅ 处理完成</text>
+      <text class="result-close" bindtap="closeResult">✕</text>
+    </view>
+
+    <!-- 提取的标题 -->
+    <view class="result-row">
+      <text class="result-label">标题</text>
+      <text class="result-value">{{result.title || '未提取到标题'}}</text>
+    </view>
+
+    <!-- 提取的内容 -->
+    <view class="result-row">
+      <text class="result-label">内容</text>
+      <text class="result-value">{{result.content || '未提取到内容'}}</text>
+    </view>
+
+    <!-- 分类的项目标签 -->
+    <view class="result-row" wx:if="{{result.project_tag}}">
+      <text class="result-label">分类</text>
+      <view class="result-tag" style="background-color: {{result.tag_color || '#3B82F6'}}">
+        {{result.project_tag}}
+      </view>
+    </view>
+
+    <view class="result-actions">
+      <view class="btn btn-ghost" bindtap="closeResult">继续输入</view>
+    </view>
+  </view>
+
+  <!-- 最近处理的通知列表 -->
+  <view class="recent-section" wx:if="{{recentNotifications.length > 0}}">
+    <view class="section-header">
+      <text class="section-title">最近处理</text>
+      <text class="section-more" bindtap="viewAllNotifications">查看全部 ›</text>
+    </view>
+
+    <notification-card
+      wx:for="{{recentNotifications}}"
+      wx:key="id"
+      notification="{{item}}"
+      bind:tap="onNotificationTap"
+    ></notification-card>
+  </view>
+
+</view>
+
+<!-- 文字输入弹窗 -->
+<view class="modal-mask" wx:if="{{showTextInput}}" bindtap="hideTextInputModal">
+  <view class="modal-content" catchtap="">
+    <view class="modal-title">输入通知文字</view>
+    <textarea
+      class="modal-textarea"
+      placeholder="请粘贴或输入通知内容..."
+      placeholder-class="modal-placeholder"
+      value="{{textContent}}"
+      bindinput="onTextInput"
+      maxlength="-1"
+      auto-height
+      focus="{{showTextInput}}"
+    ></textarea>
+    <view class="modal-actions">
+      <view class="btn btn-ghost modal-btn" bindtap="hideTextInputModal">取消</view>
+      <view class="btn btn-primary modal-btn" bindtap="submitText">提交</view>
+    </view>
+  </view>
+</view>

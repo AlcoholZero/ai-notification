@@ -1,0 +1,112 @@
+<!-- profile.wxml - 个人中心页 -->
+<view class="container">
+
+  <!-- 用户信息卡片 -->
+  <view class="card user-card">
+    <view class="user-avatar" bindtap="onChooseAvatar">
+      <image wx:if="{{avatarUrl}}" class="avatar-img" src="{{avatarUrl}}" mode="aspectFill"></image>
+      <view wx:else class="avatar-placeholder">👤</view>
+    </view>
+    <view class="user-info">
+      <view class="user-name">{{nickname}}</view>
+      <view class="user-id">ID: {{userId}}</view>
+    </view>
+  </view>
+
+  <!-- 统计信息 -->
+  <view class="card stats-card">
+    <view class="stats-item">
+      <view class="stats-value">{{stats.total}}</view>
+      <view class="stats-label">累计处理</view>
+    </view>
+    <view class="stats-divider"></view>
+    <view class="stats-item">
+      <view class="stats-value">{{stats.weekly}}</view>
+      <view class="stats-label">本周处理</view>
+    </view>
+    <view class="stats-divider"></view>
+    <view class="stats-item">
+      <view class="stats-value">{{stats.accuracy}}</view>
+      <view class="stats-label">分类准确率</view>
+    </view>
+  </view>
+
+  <!-- 项目标签管理 -->
+  <view class="card">
+    <view class="section-header">
+      <text class="section-title">项目标签</text>
+      <text class="section-add" bindtap="showCreateProjectModal">+ 新建</text>
+    </view>
+
+    <view class="project-list" wx:if="{{projects.length > 0}}">
+      <view class="project-item" wx:for="{{projects}}" wx:key="id">
+        <view class="project-dot" style="background-color: {{item.color || '#3B82F6'}}"></view>
+        <text class="project-name">{{item.name}}</text>
+      </view>
+    </view>
+
+    <view class="empty-project" wx:else>
+      <text class="empty-project-text">暂无项目标签</text>
+    </view>
+  </view>
+
+  <!-- 功能菜单 -->
+  <view class="card menu-card">
+    <view class="menu-item" bindtap="goToAbout">
+      <text class="menu-icon">ℹ️</text>
+      <text class="menu-text">关于AI通知助手</text>
+      <text class="menu-arrow">›</text>
+    </view>
+    <view class="menu-divider"></view>
+    <view class="menu-item" bindtap="clearCache">
+      <text class="menu-icon">🗑️</text>
+      <text class="menu-text">清除缓存</text>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+
+</view>
+
+<!-- 新建项目弹窗 -->
+<view class="modal-mask" wx:if="{{showCreateModal}}" bindtap="hideCreateProjectModal">
+  <view class="modal-content" catchtap="">
+    <view class="modal-title">新建项目标签</view>
+
+    <!-- 项目名称输入 -->
+    <view class="form-group">
+      <view class="form-label">项目名称</view>
+      <input
+        class="form-input"
+        placeholder="请输入项目名称"
+        placeholder-class="form-placeholder"
+        value="{{newProjectName}}"
+        bindinput="onProjectNameInput"
+        maxlength="20"
+        focus="{{showCreateModal}}"
+      />
+    </view>
+
+    <!-- 颜色选择 -->
+    <view class="form-group">
+      <view class="form-label">标签颜色</view>
+      <view class="color-list">
+        <view
+          wx:for="{{colorOptions}}"
+          wx:key="*this"
+          class="color-item {{newProjectColor === item ? 'selected' : ''}}"
+          style="background-color: {{item}}"
+          data-color="{{item}}"
+          bindtap="onColorSelect"
+        >
+          <text wx:if="{{newProjectColor === item}}" class="color-check">✓</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="modal-actions">
+      <view class="btn btn-ghost modal-btn" bindtap="hideCreateProjectModal">取消</view>
+      <view class="btn btn-primary modal-btn" bindtap="createProject">创建</view>
+    </view>
+  </view>
+</view>

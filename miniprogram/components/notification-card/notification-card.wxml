@@ -1,0 +1,19 @@
+<!-- notification-card.wxml - 通知卡片组件模板 -->
+<view class="notification-card" bindtap="onTap">
+  <!-- 卡片头部：来源图标 + 标题 + 时间 -->
+  <view class="card-header">
+    <view class="source-icon">{{ notification.source_type === 'voice' ? '\uD83C\uDFA4' : notification.source_type === 'screenshot' ? '\uD83D\uDCF7' : '\u270F\uFE0F' }}</view>
+    <view class="card-title">{{ notification.title || '未命名通知' }}</view>
+    <view class="card-time">{{ notification.time_ago || '' }}</view>
+  </view>
+
+  <!-- 内容摘要 -->
+  <view class="card-content">{{ notification.content_summary || notification.content || '' }}</view>
+
+  <!-- 卡片底部：项目标签 -->
+  <view class="card-footer" wx:if="{{ notification.project_tag }}">
+    <view class="project-tag" style="background-color: {{ notification.tag_color || '#3B82F6' }}">
+      {{ notification.project_tag }}
+    </view>
+  </view>
+</view>

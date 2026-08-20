@@ -1,0 +1,43 @@
+<!-- notifications.wxml - 通知列表页 -->
+<view class="container">
+
+  <!-- 项目标签筛选栏（横向滚动） -->
+  <scroll-view class="tag-bar" scroll-x="true" enhanced="true" show-scrollbar="{{false}}">
+    <view
+      wx:for="{{tags}}"
+      wx:key="*this"
+      class="tag-item {{currentTag === item ? 'active' : ''}}"
+      data-tag="{{item}}"
+      bindtap="onTagTap"
+    >
+      {{item}}
+    </view>
+  </scroll-view>
+
+  <!-- 通知列表 -->
+  <view class="notification-list" wx:if="{{notifications.length > 0}}">
+    <notification-card
+      wx:for="{{notifications}}"
+      wx:key="id"
+      notification="{{item}}"
+      bind:tap="onNotificationTap"
+    ></notification-card>
+
+    <!-- 加载更多提示 -->
+    <view class="load-more" wx:if="{{loading}}">
+      <view class="loading-spinner"></view>
+      <text>加载中...</text>
+    </view>
+    <view class="load-more" wx:if="{{!hasMore && notifications.length > 0}}">
+      <text class="no-more">没有更多了</text>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{showEmpty}}">
+    <view class="empty-state-icon">📭</view>
+    <view class="empty-state-text">暂无通知记录</view>
+    <view class="empty-state-subtext">去首页添加通知吧</view>
+  </view>
+
+</view>

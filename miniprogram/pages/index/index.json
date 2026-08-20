@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "AI通知助手",
+  "usingComponents": {
+    "notification-card": "/components/notification-card/notification-card"
+  },
+  "enablePullDownRefresh": false
+}

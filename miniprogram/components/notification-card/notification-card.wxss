@@ -1,0 +1,72 @@
+/* notification-card.wxss - 通知卡片组件样式 */
+
+.notification-card {
+  background-color: #ffffff;
+  border-radius: 20rpx;
+  padding: 28rpx 32rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.notification-card:active {
+  transform: scale(0.98);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+}
+
+/* 卡片头部 */
+.card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.source-icon {
+  font-size: 36rpx;
+  margin-right: 16rpx;
+  line-height: 1;
+}
+
+.card-title {
+  flex: 1;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+  /* 单行省略 */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.card-time {
+  font-size: 22rpx;
+  color: #BBBBBB;
+  flex-shrink: 0;
+  margin-left: 16rpx;
+}
+
+/* 内容摘要 - 两行省略 */
+.card-content {
+  font-size: 26rpx;
+  color: #666666;
+  line-height: 1.6;
+  margin-bottom: 16rpx;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+/* 卡片底部标签 */
+.card-footer {
+  display: flex;
+  align-items: center;
+}
+
+.project-tag {
+  display: inline-block;
+  padding: 4rpx 18rpx;
+  border-radius: 6rpx;
+  font-size: 22rpx;
+  color: #ffffff;
+}
